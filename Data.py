@@ -16,18 +16,63 @@ def getBankData(split_fraction):
         print('Invalid Split Fraction')
         return None
 
+    #read the data
     data_frame = pd.read_csv('bank.csv');
-    #print(data_frame.head())
-    data_frame = data_frame.sample(frac=1).reset_index(drop=True)
-    #print(data_frame.head())
-    mid = int(round(split_fraction*len(data_frame.index),0))
-    # print(mid,len(data_frame.index))
-    train_data = data_frame.iloc[ : mid , : ]
-    test_data = data_frame.iloc[ mid : , :  ]
+    
+    
+    data_records = data_frame[list(data_frame.columns)].to_dict(orient = 'records')
+    new_data = []
+    
+    #PROCESSING OF DATA
+    for data_record in data_records:
+        
+        #ASSIGN CLASS TO BALANCE RANGES
+        if(data_record['balance']<10000):
+            data_record['balance'] = 'LessThan10000'
+        elif(data_record['balance']>=10000 and data_record['balance']<20000) :
+            data_record['balance'] = 'LessThan20000'
+        elif(data_record['balance']>=20000 and data_record['balance']<30000) :
+            data_record['balance'] = 'LessThan30000'
+        elif(data_record['balance']>=30000 and data_record['balance']<40000) :
+            data_record['balance'] = 'LessThan40000'
+        elif(data_record['balance']>=40000 and data_record['balance']<50000) :
+            data_record['balance'] = 'LessThan50000'
+        else:
+            data_record['balance'] = 'GreaterThan500000'
+            
+        #ASSIGN CLASS DURATION RANGES
+        if(data_record['duration']<=365):
+            data_record['duration']='LessThan365secs'
+        elif(data_record['duration']>365 and data_record['duration']<=730):
+            data_record['duration']='LessThan730secs'
+        elif(data_record['duration']>730 and data_record['duration']<=995):
+            data_record['duration']='LessThan995secs'
+        else:
+            data_record['duration']='MoreThan995secs'
+        
+        #ASSIGN CLASS AGE RANGES
+        if(data_record['age']<=40):
+            data_record['age']='Adults'
+        elif(data_record['age']>40 and data_record['age']<=60):
+            data_record['age']='MiddleAged'
+        else:
+            data_record['age']='SeniorCitizens'
+        
+        new_data.append(data_record);
+        
+    data_frameq = pd.DataFrame(new_data);
+    del data_frameq['pdays']
+    #randomize the order of data
+    data_frameq = data_frameq.sample(frac=1).reset_index(drop=True)
+    
+    #find the split point
+    mid = int(round(split_fraction*len(data_frameq.index),0))
+    
+    #split the data
+    train_data = data_frameq.iloc[ : mid , : ]
+    test_data = data_frameq.iloc[ mid : , :  ]
 
-    # print(train_data.head())
-    # print(test_data.head())
-
+    #return 
     return train_data,test_data
 
 def unique_vals(data,attr):
